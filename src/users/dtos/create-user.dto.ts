@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsEmail, IsISO8601 } from 'class-validator';
 
-import { User } from './user.entity';
+import { User } from '../user.entity';
 
 export class CreateUserDto {
   @IsNotEmpty()
