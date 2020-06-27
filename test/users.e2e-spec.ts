@@ -5,12 +5,14 @@ import {
   ValidationPipe,
   ClassSerializerInterceptor,
 } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
 import { EntityManager, Connection } from 'typeorm';
 
 import { UsersModule } from '../src/users/users.module';
 import { User } from '../src/users/user.entity';
+import { LogInRequestDto } from '../src/users/dtos/log-in.dto';
 
 describe('Users', () => {
   let app: INestApplication;
@@ -19,7 +21,9 @@ describe('Users', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        UsersModule,
+        ConfigModule.forRoot({
+          envFilePath: '.env.test',
+        }),
         TypeOrmModule.forRoot({
           type: 'sqlite',
           entities: ['src/**/**.entity{.ts,.js}'],
@@ -27,6 +31,7 @@ describe('Users', () => {
           synchronize: true,
           database: 'data/test-db.sqlite',
         }),
+        UsersModule,
       ],
     }).compile();
     entityManager = module.get<Connection>(Connection).createEntityManager();
@@ -157,6 +162,93 @@ describe('Users', () => {
             lastName: 'Agudelo',
             userId: 'de87b61c7b6cdccb32edeed3890244ce',
           });
+        });
+    });
+  });
+
+  describe('logs in a user', () => {
+    const logInRequest: LogInRequestDto = {
+      email: 'cf.agudelo96@gmail.com',
+      password: 'Test12345',
+    };
+
+    let user: User;
+
+    beforeEach(async () => {
+      user = entityManager.create(User, {
+        ...logInRequest,
+        birthDate: '1995-09-19',
+        name: 'Carlos',
+        lastName: 'Agudelo',
+      });
+      user = await entityManager.save(user);
+    });
+
+    describe('validates required fields', () => {
+      it('should throw an error if the email is not provided', async () => {
+        const { email, ...invalidLogInRequestDto } = logInRequest;
+        await request(app.getHttpServer())
+          .post('/users/log-in')
+          .send(invalidLogInRequestDto)
+          .expect(400)
+          .expect(response => {
+            expect(response.body.message).toEqual([
+              'email should not be empty',
+            ]);
+          });
+      });
+
+      it('should throw an error if the password is not provided', async () => {
+        const { password, ...invalidLogInRequestDto } = logInRequest;
+        await request(app.getHttpServer())
+          .post('/users/log-in')
+          .send(invalidLogInRequestDto)
+          .expect(400)
+          .expect(response => {
+            expect(response.body.message).toEqual([
+              'password should not be empty',
+            ]);
+          });
+      });
+    });
+
+    it('should throw an error if a user with the email provided does not exist', async () => {
+      const logInRequestNoUser = {
+        ...logInRequest,
+        email: 'cf.agudelo95@gmail.com',
+      };
+      await request(app.getHttpServer())
+        .post('/users/log-in')
+        .send(logInRequestNoUser)
+        .expect(400)
+        .expect(response => {
+          expect(response.body.message).toEqual(
+            'There is no user registered with the email provided',
+          );
+        });
+    });
+
+    it('should throw an error if the password is incorrect', async () => {
+      const logInRequestIncorrectPassword = {
+        ...logInRequest,
+        password: '12345',
+      };
+      await request(app.getHttpServer())
+        .post('/users/log-in')
+        .send(logInRequestIncorrectPassword)
+        .expect(400)
+        .expect(response => {
+          expect(response.body.message).toEqual('Invalid password');
+        });
+    });
+
+    it('should work correctly', async () => {
+      await request(app.getHttpServer())
+        .post('/users/log-in')
+        .send(logInRequest)
+        .expect(200)
+        .expect(response => {
+          expect(response.body.token).toBeDefined();
         });
     });
   });
