@@ -10,7 +10,7 @@ import { UsersModule } from './users/users.module';
       type: 'sqlite',
       entities: [join(__dirname, '**/**.entity{.ts,.js}')],
       migrations: [join(resolve(__dirname, '..'), 'migrations/*{.ts,.js}')],
-      database: join(resolve(__dirname, '..'), 'data/db.sqlite'),
+      database: 'data/db.sqlite',
     }),
     UsersModule,
   ],
