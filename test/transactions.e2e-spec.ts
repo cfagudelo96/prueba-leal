@@ -139,4 +139,50 @@ describe('Transactions', () => {
         });
     });
   });
+
+  describe('inactivates a transaction', () => {
+    let user: User;
+    let transaction: Transaction;
+
+    beforeEach(async () => {
+      user = entityManager.create(User, {
+        email: 'cf.agudelo96@gmail.com',
+        password: 'Test12345',
+        birthDate: '1995-09-19',
+        name: 'Carlos',
+        lastName: 'Agudelo',
+      });
+      user = await entityManager.save(user);
+      transaction = entityManager.create(Transaction, {
+        userId: user.userId,
+        value: 8750,
+      });
+      transaction = await entityManager.save(transaction);
+    });
+
+    it('should throw an error if the transaction is not found', async () => {
+      await request(app.getHttpServer())
+        .put(`/transactions/${transaction.id + 80085}/inactivate`)
+        .expect(400)
+        .expect(response => {
+          expect(response.body.message).toEqual(
+            'The transaction was not found',
+          );
+        });
+    });
+
+    it('should work correctly', async () => {
+      await request(app.getHttpServer())
+        .put(`/transactions/${transaction.id}/inactivate`)
+        .expect(200)
+        .expect(response => {
+          const expectedTransaction = {
+            ...transaction,
+            status: 0,
+            createdAt: transaction.createdAt.toISOString(),
+          };
+          expect(response.body).toEqual(expectedTransaction);
+        });
+    });
+  });
 });

@@ -132,7 +132,7 @@ describe('Users', () => {
       });
     });
 
-    it('should throw an error if there is an user with the same email', async () => {
+    it('should throw an error if there is a user with the same email', async () => {
       const user = entityManager.create(User, createUserDto);
       await entityManager.save(user);
       await request(app.getHttpServer())

@@ -24,6 +24,7 @@ describe('Transactions Controller', () => {
           provide: TransactionsService,
           useValue: {
             create: jest.fn().mockResolvedValue(transaction),
+            inactivate: jest.fn().mockResolvedValue(transaction),
           },
         },
       ],
@@ -40,5 +41,12 @@ describe('Transactions Controller', () => {
     const returnedTransaction = await controller.create(createTransactionDto);
     expect(returnedTransaction).toBe(transaction);
     expect(service.create).toHaveBeenCalledWith(createTransactionDto);
+  });
+
+  it('should send a transaction for inactivation and return the updated version', async () => {
+    const id = 1;
+    const returnedTransaction = await controller.inactivate(id);
+    expect(returnedTransaction).toBe(transaction);
+    expect(service.inactivate).toHaveBeenCalledWith(id);
   });
 });

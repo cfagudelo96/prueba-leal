@@ -1,4 +1,11 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Put,
+  Body,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 
 import { CreateTransactionDto } from './dtos/create-transaction.dto';
 import { Transaction } from './transaction.entity';
@@ -13,5 +20,10 @@ export class TransactionsController {
     @Body() createTransactionDto: CreateTransactionDto,
   ): Promise<Transaction> {
     return this.transactionsService.create(createTransactionDto);
+  }
+
+  @Put(':id/inactivate')
+  inactivate(@Param('id', ParseIntPipe) id: number): Promise<Transaction> {
+    return this.transactionsService.inactivate(id);
   }
 }
