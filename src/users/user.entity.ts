@@ -4,10 +4,13 @@ import {
   CreateDateColumn,
   Column,
   BeforeInsert,
+  OneToMany,
 } from 'typeorm';
 import { MD5 } from 'crypto-js';
 import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
+
+import { Transaction } from '../transactions/transaction.entity';
 
 @Entity()
 export class User {
@@ -34,6 +37,12 @@ export class User {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @OneToMany(
+    () => Transaction,
+    transaction => transaction.user,
+  )
+  transactions: Promise<Transaction[]>;
 
   constructor(partial?: Partial<User>) {
     Object.assign(this, partial);

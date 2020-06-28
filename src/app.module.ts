@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { join, resolve } from 'path';
 
 import { UsersModule } from './users/users.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { UsersModule } from './users/users.module';
       database: 'data/db.sqlite',
     }),
     UsersModule,
+    TransactionsModule,
   ],
 })
 export class AppModule {}
