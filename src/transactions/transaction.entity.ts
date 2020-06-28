@@ -7,6 +7,7 @@ import {
   BeforeInsert,
   JoinColumn,
 } from 'typeorm';
+import * as Excel from 'exceljs';
 
 import { User } from '../users/user.entity';
 
@@ -40,6 +41,23 @@ export class Transaction {
 
   constructor(partial?: Partial<Transaction>) {
     Object.assign(this, partial);
+  }
+
+  static getExportWorkbook(): Excel.Workbook {
+    const workbook = new Excel.Workbook();
+    const sheet = workbook.addWorksheet('Transactions');
+    sheet.columns = this.getExcelColumns();
+    return workbook;
+  }
+
+  private static getExcelColumns(): Array<Partial<Excel.Column>> {
+    return [
+      { header: 'Id', key: 'id' },
+      { header: 'Value', key: 'value' },
+      { header: 'Points', key: 'points' },
+      { header: 'Status', key: 'status' },
+      { header: 'Creation date', key: 'createdAt' },
+    ];
   }
 
   @BeforeInsert()

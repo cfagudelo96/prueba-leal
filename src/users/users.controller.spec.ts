@@ -1,4 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import * as httpMocks from 'node-mocks-http';
+
+import { Transaction } from '../transactions/transaction.entity';
 
 import { User } from './user.entity';
 import { UsersController } from './users.controller';
@@ -28,6 +31,8 @@ describe('Users Controller', () => {
           provide: UsersService,
           useValue: {
             getPoints: jest.fn(),
+            getTransactions: jest.fn(),
+            getTransactionsFile: jest.fn(),
             register: jest.fn().mockResolvedValue(user),
             logIn: jest.fn(),
           },
@@ -44,6 +49,31 @@ describe('Users Controller', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('should request and return the user transactions', async () => {
+    const userId = 'someHash';
+    const transactions = [new Transaction()];
+    (service.getTransactions as jest.Mock).mockResolvedValue(transactions);
+    const returnedTransactions = await controller.getTransactions(userId);
+    expect(service.getTransactions).toHaveBeenCalledWith(userId);
+    expect(returnedTransactions).toBe(transactions);
+  });
+
+  it('should send and return the transactions file', async () => {
+    const buffer = new Buffer('Excel file');
+    (service.getTransactionsFile as jest.Mock).mockResolvedValue(buffer);
+    const userId = 'someHash';
+    const response = httpMocks.createResponse();
+    await controller.getTransactionsFile(userId, response);
+    expect(service.getTransactionsFile).toHaveBeenCalledWith(userId);
+    expect(response._getHeaders()).toEqual({
+      'content-disposition':
+        'attachment; filename="Transactions-someHash.xlsx"',
+      'content-transfer-encoding': 'binary',
+      'content-type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/octet-stream',
+    });
   });
 
   it("should send and return the request for a user's points", async () => {
