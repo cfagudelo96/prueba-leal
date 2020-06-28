@@ -87,6 +87,30 @@ describe('UsersService', () => {
     });
   });
 
+  describe("gets a user's transactions in a file", () => {
+    const userId = 'emailHash';
+
+    it('it should throw an error if the user is not found', async () => {
+      (repository.findOne as jest.Mock).mockResolvedValue(undefined);
+      try {
+        await service.getTransactionsFile(userId);
+        fail();
+      } catch (error) {
+        expect(error.message).toBe('The user was not found');
+      }
+    });
+
+    it('should request and return the transactions', async () => {
+      const transactions = [new Transaction({ value: 1000 })];
+      (repository.findOne as jest.Mock).mockResolvedValue(user);
+      (transactionsService.findByUser as jest.Mock).mockResolvedValue(
+        transactions,
+      );
+      const file = await service.getTransactionsFile(userId);
+      expect(file).toBeTruthy();
+    });
+  });
+
   describe('registers a new user', () => {
     it('should send to save the new user', async () => {
       const createdUser = await service.register(createUserDto);

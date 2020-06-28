@@ -36,6 +36,14 @@ export class UsersService {
     return this.transactionsService.findByUser(id);
   }
 
+  async getTransactionsFile(id: string): Promise<Buffer> {
+    const transactions = await this.getTransactions(id);
+    const workbook = Transaction.getExportWorkbook();
+    const sheet = workbook.getWorksheet('Transactions');
+    sheet.addRows(transactions, 'i');
+    return workbook.xlsx.writeBuffer() as Promise<Buffer>;
+  }
+
   async getPoints(id: string): Promise<{ points: number }> {
     await this.findByIdOrFail(id);
     const query = this.usersRepository

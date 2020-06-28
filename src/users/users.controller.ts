@@ -1,4 +1,13 @@
-import { Controller, Get, Post, HttpCode, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  HttpCode,
+  Body,
+  Param,
+  Res,
+} from '@nestjs/common';
+import { Response } from 'express';
 
 import { Transaction } from '../transactions/transaction.entity';
 
@@ -14,6 +23,24 @@ export class UsersController {
   @Get(':id/transactions')
   getTransactions(@Param('id') id: string): Promise<Transaction[]> {
     return this.usersService.getTransactions(id);
+  }
+
+  @Get(':id/transactions-file')
+  async getTransactionsFile(
+    @Param('id') id: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const buffer = await this.usersService.getTransactionsFile(id);
+    res.setHeader('Content-Transfer-Encoding', 'binary');
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/octet-stream',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="Transactions-${id}.xlsx"`,
+    );
+    res.send(buffer);
   }
 
   @Get(':id/points')

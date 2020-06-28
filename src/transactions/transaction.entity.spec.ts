@@ -6,4 +6,10 @@ describe('Transaction', () => {
     transaction.calculatePoints();
     expect(transaction.points).toBe(8);
   });
+
+  it('should get an export workbook', () => {
+    const workbook = Transaction.getExportWorkbook();
+    expect(workbook).toBeDefined();
+    expect(workbook.getWorksheet('Transactions')).toBeDefined();
+  });
 });
