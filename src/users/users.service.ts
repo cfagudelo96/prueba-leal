@@ -21,6 +21,16 @@ export class UsersService {
     return user;
   }
 
+  async getPoints(id: string): Promise<{ points: number }> {
+    await this.findByIdOrFail(id);
+    const query = this.usersRepository
+      .createQueryBuilder('user')
+      .select('COALESCE(SUM(transaction.points), 0)', 'points')
+      .innerJoin('user.transactions', 'transaction', 'transaction.status = 1')
+      .where('user.userId = :id', { id });
+    return query.getRawOne();
+  }
+
   async register(createUserDto: CreateUserDto): Promise<User> {
     await this.validateUniqueEmail(createUserDto.email);
     return this.usersRepository.save(createUserDto.toEntity());

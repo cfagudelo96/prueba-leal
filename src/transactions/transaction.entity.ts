@@ -5,6 +5,7 @@ import {
   ManyToOne,
   Column,
   BeforeInsert,
+  JoinColumn,
 } from 'typeorm';
 
 import { User } from '../users/user.entity';
@@ -31,6 +32,7 @@ export class Transaction {
     user => user.transactions,
     { onDelete: 'CASCADE' },
   )
+  @JoinColumn({ name: 'userId' })
   user: Promise<User>;
 
   @Column()

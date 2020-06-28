@@ -27,6 +27,7 @@ describe('Users Controller', () => {
         {
           provide: UsersService,
           useValue: {
+            getPoints: jest.fn(),
             register: jest.fn().mockResolvedValue(user),
             logIn: jest.fn(),
           },
@@ -43,6 +44,15 @@ describe('Users Controller', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it("should send and return the request for a user's points", async () => {
+    const userId = 'someHash';
+    const pointsResponse = { points: 99 };
+    (service.getPoints as jest.Mock).mockResolvedValue(pointsResponse);
+    const returnedResponse = await controller.getPoints(userId);
+    expect(service.getPoints).toHaveBeenCalledWith(userId);
+    expect(returnedResponse).toBe(pointsResponse);
   });
 
   it('should send and return the register info correctly', async () => {
