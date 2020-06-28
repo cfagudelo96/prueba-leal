@@ -13,6 +13,7 @@ import { EntityManager, Connection } from 'typeorm';
 import { UsersModule } from '../src/users/users.module';
 import { User } from '../src/users/user.entity';
 import { LogInRequestDto } from '../src/users/dtos/log-in.dto';
+import { Transaction } from '../src/transactions/transaction.entity';
 
 describe('Users', () => {
   let app: INestApplication;
@@ -52,6 +53,55 @@ describe('Users', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  describe("gets a user's points", () => {
+    let user: User;
+
+    beforeEach(async () => {
+      user = entityManager.create(User, {
+        email: 'cf.agudelo96@gmail.com',
+        password: 'Test12345',
+        birthDate: '1995-09-19',
+        name: 'Carlos',
+        lastName: 'Agudelo',
+      });
+      user = await entityManager.save(user);
+      const transaction1 = entityManager.create(Transaction, {
+        userId: user.userId,
+        value: 8750,
+      });
+      await entityManager.save(transaction1);
+      const transaction2 = entityManager.create(Transaction, {
+        userId: user.userId,
+        value: 10000,
+      });
+      await entityManager.save(transaction2);
+      const transaction3 = entityManager.create(Transaction, {
+        userId: user.userId,
+        value: 100000,
+        status: 0,
+      });
+      await entityManager.save(transaction3);
+    });
+
+    it('should throw an error if the user does not exist', async () => {
+      await request(app.getHttpServer())
+        .get(`/users/${user.userId}Oops/points`)
+        .expect(400)
+        .expect(response => {
+          expect(response.body.message).toEqual('The user was not found');
+        });
+    });
+
+    it('should return the correct value', async () => {
+      await request(app.getHttpServer())
+        .get(`/users/${user.userId}/points`)
+        .expect(200)
+        .expect(response => {
+          expect(response.body).toEqual({ points: 18 });
+        });
+    });
   });
 
   describe('registers a new user', () => {
