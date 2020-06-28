@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -15,11 +15,24 @@ export class TransactionsService {
     private readonly usersService: UsersService,
   ) {}
 
+  async findByIdOrFail(id: number): Promise<Transaction> {
+    const transaction = await this.transactionsRepository.findOne(id);
+    if (!transaction)
+      throw new BadRequestException('The transaction was not found');
+    return transaction;
+  }
+
   async create(
     createTransactionDto: CreateTransactionDto,
   ): Promise<Transaction> {
     const { userId } = createTransactionDto;
     await this.usersService.findByIdOrFail(userId);
     return this.transactionsRepository.save(createTransactionDto.toEntity());
+  }
+
+  async inactivate(id: number): Promise<Transaction> {
+    const transaction = await this.findByIdOrFail(id);
+    transaction.status = 0;
+    return this.transactionsRepository.save(transaction);
   }
 }

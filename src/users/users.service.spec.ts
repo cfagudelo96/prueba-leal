@@ -58,7 +58,7 @@ describe('UsersService', () => {
       expect(createdUser).toBe(user);
     });
 
-    it('should throw an error if there is an user with the same email', async () => {
+    it('should throw an error if there is a user with the same email', async () => {
       (repository.findOne as jest.Mock).mockResolvedValue(user);
       try {
         await service.register(createUserDto);
@@ -113,7 +113,7 @@ describe('UsersService', () => {
     });
   });
 
-  describe('finds an user by id', () => {
+  describe('finds a user by id', () => {
     const userId = 'emailHash';
 
     it('should throw an error if the user is not found', async () => {
