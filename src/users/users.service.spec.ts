@@ -69,7 +69,7 @@ describe('UsersService', () => {
     });
   });
 
-  describe('signs in a user', () => {
+  describe('logs in a user', () => {
     const logInRequestDto: LogInRequestDto = {
       email: 'cf.agudelo96@gmail.com',
       password: 'Test12345',
@@ -110,6 +110,26 @@ describe('UsersService', () => {
       const result = await service.logIn(logInRequestDto);
       expect(jwtService.sign).toHaveBeenCalledWith({ userId });
       expect(result).toEqual({ token });
+    });
+  });
+
+  describe('finds an user by id', () => {
+    const userId = 'emailHash';
+
+    it('should throw an error if the user is not found', async () => {
+      (repository.findOne as jest.Mock).mockResolvedValue(undefined);
+      try {
+        await service.findByIdOrFail(userId);
+        fail();
+      } catch (error) {
+        expect(error.message).toBe('The user was not found');
+      }
+    });
+
+    it('should return the user', async () => {
+      (repository.findOne as jest.Mock).mockResolvedValue(user);
+      const returnedUser = await service.findByIdOrFail(userId);
+      expect(returnedUser).toBe(user);
     });
   });
 });

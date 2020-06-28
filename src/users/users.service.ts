@@ -15,6 +15,12 @@ export class UsersService {
     private readonly jwtService: JwtService,
   ) {}
 
+  async findByIdOrFail(id: string): Promise<User> {
+    const user = await this.usersRepository.findOne(id);
+    if (!user) throw new BadRequestException('The user was not found');
+    return user;
+  }
+
   async register(createUserDto: CreateUserDto): Promise<User> {
     await this.validateUniqueEmail(createUserDto.email);
     return this.usersRepository.save(createUserDto.toEntity());
