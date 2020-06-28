@@ -3,6 +3,9 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 
+import { TransactionsService } from '../transactions/transactions.service';
+import { Transaction } from '../transactions/transaction.entity';
+
 import { UsersService } from './users.service';
 import { User } from './user.entity';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -11,6 +14,7 @@ import { LogInRequestDto } from './dtos/log-in.dto';
 describe('UsersService', () => {
   let repository: Repository<User>;
   let jwtService: JwtService;
+  let transactionsService: TransactionsService;
   let service: UsersService;
 
   const createUserDto = new CreateUserDto({
@@ -34,6 +38,12 @@ describe('UsersService', () => {
           },
         },
         {
+          provide: TransactionsService,
+          useValue: {
+            findByUser: jest.fn(),
+          },
+        },
+        {
           provide: getRepositoryToken(User),
           useValue: {
             findOne: jest.fn(),
@@ -44,11 +54,37 @@ describe('UsersService', () => {
     }).compile();
     repository = module.get<Repository<User>>(getRepositoryToken(User));
     jwtService = module.get<JwtService>(JwtService);
+    transactionsService = module.get<TransactionsService>(TransactionsService);
     service = module.get<UsersService>(UsersService);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe("gets a user's transactions", () => {
+    const userId = 'emailHash';
+
+    it('it should throw an error if the user is not found', async () => {
+      (repository.findOne as jest.Mock).mockResolvedValue(undefined);
+      try {
+        await service.getTransactions(userId);
+        fail();
+      } catch (error) {
+        expect(error.message).toBe('The user was not found');
+      }
+    });
+
+    it('should request and return the transactions', async () => {
+      const transactions = [new Transaction({ value: 1000 })];
+      (repository.findOne as jest.Mock).mockResolvedValue(user);
+      (transactionsService.findByUser as jest.Mock).mockResolvedValue(
+        transactions,
+      );
+      const returnedTransactions = await service.getTransactions(userId);
+      expect(transactionsService.findByUser).toHaveBeenCalledWith(userId);
+      expect(returnedTransactions).toBe(transactions);
+    });
   });
 
   describe('registers a new user', () => {

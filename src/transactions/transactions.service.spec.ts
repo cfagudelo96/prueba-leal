@@ -30,6 +30,7 @@ describe('TransactionsService', () => {
           provide: getRepositoryToken(Transaction),
           useValue: {
             findOne: jest.fn(),
+            find: jest.fn(),
             save: jest.fn().mockResolvedValue(transaction),
           },
         },
@@ -64,6 +65,17 @@ describe('TransactionsService', () => {
       const returnedTransaction = await service.findByIdOrFail(id);
       expect(returnedTransaction).toBe(transaction);
     });
+  });
+
+  it('should find transactions by user', async () => {
+    const userId = 'someHash';
+    (repository.find as jest.Mock).mockResolvedValue([transaction]);
+    const returnedTransactions = await service.findByUser(userId);
+    expect(repository.find).toHaveBeenCalledWith({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+    expect(returnedTransactions).toEqual([transaction]);
   });
 
   it('should create a new transaction correctly', async () => {

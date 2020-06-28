@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -12,6 +17,7 @@ export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private readonly transactionsRepository: Repository<Transaction>,
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
   ) {}
 
@@ -20,6 +26,13 @@ export class TransactionsService {
     if (!transaction)
       throw new BadRequestException('The transaction was not found');
     return transaction;
+  }
+
+  async findByUser(userId: string): Promise<Transaction[]> {
+    return this.transactionsRepository.find({
+      order: { createdAt: 'DESC' },
+      where: { userId },
+    });
   }
 
   async create(
