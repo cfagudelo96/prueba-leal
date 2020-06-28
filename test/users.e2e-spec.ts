@@ -49,6 +49,7 @@ describe('Users', () => {
 
   beforeEach(async () => {
     await entityManager.clear(User);
+    await entityManager.clear(Transaction);
   });
 
   afterAll(async () => {
@@ -100,6 +101,65 @@ describe('Users', () => {
         .expect(200)
         .expect(response => {
           expect(response.body).toEqual({ points: 18 });
+        });
+    });
+  });
+
+  describe("gets a user's transactions", () => {
+    let user: User;
+    let transactions: Transaction[];
+
+    beforeEach(async () => {
+      user = entityManager.create(User, {
+        email: 'cf.agudelo96@gmail.com',
+        password: 'Test12345',
+        birthDate: '1995-09-19',
+        name: 'Carlos',
+        lastName: 'Agudelo',
+      });
+      user = await entityManager.save(user);
+      transactions = [];
+      const transaction1 = entityManager.create(Transaction, {
+        userId: user.userId,
+        value: 8750,
+        createdAt: new Date('2020-05-05'),
+      });
+      transactions.push(await entityManager.save(transaction1));
+      const transaction2 = entityManager.create(Transaction, {
+        userId: user.userId,
+        value: 10000,
+        createdAt: new Date('2020-04-04'),
+      });
+      transactions.push(await entityManager.save(transaction2));
+      const transaction3 = entityManager.create(Transaction, {
+        userId: user.userId,
+        value: 100000,
+        status: 0,
+        createdAt: new Date('2020-03-03'),
+      });
+      transactions.push(await entityManager.save(transaction3));
+    });
+
+    it('should throw an error if the user does not exist', async () => {
+      await request(app.getHttpServer())
+        .get(`/users/${user.userId}Oops/transactions`)
+        .expect(400)
+        .expect(response => {
+          expect(response.body.message).toEqual('The user was not found');
+        });
+    });
+
+    it('should return the correct value', async () => {
+      await request(app.getHttpServer())
+        .get(`/users/${user.userId}/transactions`)
+        .expect(200)
+        .expect(response => {
+          expect(response.body).toEqual(
+            transactions.map(transaction => ({
+              ...transaction,
+              createdAt: transaction.createdAt.toISOString(),
+            })),
+          );
         });
     });
   });

@@ -1,7 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+
+import { TransactionsModule } from '../transactions/transactions.module';
 
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
@@ -22,6 +24,7 @@ import { User } from './user.entity';
         };
       },
     }),
+    forwardRef(() => TransactionsModule),
   ],
   controllers: [UsersController],
   providers: [UsersService],
